@@ -1,14 +1,31 @@
 import logo from './logo.svg';
 import './App.css';
-import { useSignInWithGoogle } from 'react-firebase-hooks/auth';
+import { useSignInWithEmailAndPassword, useSignInWithGoogle } from 'react-firebase-hooks/auth';
 import auth from './firebase.init';
 import { useForm } from "react-hook-form";
+import Loading from './Shared/Loading';
 function App() {
-  const [signInWithGoogle, user, loading, error] = useSignInWithGoogle(auth);
+  const [signInWithGoogle, gUser, gLoading, gError] = useSignInWithGoogle(auth);
   const { register, formState: { errors }, handleSubmit } = useForm();
-  const onSubmit = (data) => console.log(data);
-  if(user){
-    console.log(user);
+  const [
+    signInWithEmailAndPassword,
+    user,
+    loading,
+    error,
+  ] = useSignInWithEmailAndPassword(auth);
+  const onSubmit = (data) => {
+    console.log(data);
+    signInWithEmailAndPassword(data.email, data.password)
+  };
+  if( loading || gLoading){
+    return <Loading></Loading>
+  }
+  let signInError;
+  if( error || gError){
+    signInError =  <p className='text-red-500'>{error?.message || gError?.message}</p>
+  }
+  if(user || gUser){
+    console.log(gUser);
   }
   return (
     <div className="App">
@@ -65,8 +82,10 @@ function App() {
                   {errors.password?.type === 'minLength' && <span className='text-red-500 font-bold'>{errors.password.message}</span>}
                 </label>
               </div>
+              {signInError}
               <input className='btn btn-primary w-full' type="submit" value="Login" />
             </form> 
+            <p>New to Doctors Portal? <a className='text-primary' href="/signup">Create New Account</a></p>
             <div className="divider">OR</div>
           <button onClick={() => signInWithGoogle()} className="btn btn-primary">SignInWithGoogle</button>
           </div>
